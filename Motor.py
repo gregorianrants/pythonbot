@@ -16,7 +16,8 @@ class Motor():
         self.count = 0
         self.direction = direction
         self.wheel_diameter = 276 #mm
-        self.PIDcontroller = PIDController(0.001,0,0.02)
+        #self.PIDcontroller = PIDController(0.001,0,0.02)
+        self.PIDcontroller = PIDController(0.00076,0,0.0153)
         self.speed = 0
         
     """
