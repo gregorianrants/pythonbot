@@ -51,7 +51,12 @@ class Motor():
         if self.count==1:
             sentence = f'port: {self.port_letter}, speed_10deg/sec: {speed}, speed_mm/s: {speed*(1/36)*276.401},pos: {pos}, apos: {apos}'
             print(sentence)
-        speed = self.direction * self.getSpeed(speed)
+        # speed = self.direction * self.getSpeed(speed)
+        #we are converting the speed output by the build hat which is in 10 degrees per second
+        #yes you read that right i said "10"
+        #to degrees per second.
+        speed = self.direction * speed * 10 
+        print(speed)
         self.update(speed)
         
         
@@ -89,10 +94,11 @@ class Motor():
     def dc(self,duty=0.2):
         pass
         
-    def run(self,speed):
-        self.speed = speed
+    #we have changed the speed entered here from mm_per_second to degrees per second.
+    def run(self,degrees_per_second):
+        self.speed = degrees_per_second
         print('set point',0)
-        self.PIDcontroller.set_point = speed
+        self.PIDcontroller.set_point = self.speed
         
     def __str__(self):
         return f'Motor PortIndex:{self.port_index}, Port: {self.port_letter}'

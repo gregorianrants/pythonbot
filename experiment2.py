@@ -15,7 +15,7 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 print('Press Ctrl+C')
-left_motor.run(400)
+left_motor.run(521)
 time.sleep(10)
 left_motor.run(0)
 time.sleep(1)
