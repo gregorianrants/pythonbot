@@ -1,6 +1,4 @@
-## commit notes
-
-commit: refactored so that Motor.run() takes a speed in degrees_per_second in…
+## commit: refactored so that Motor.run() takes a speed in degrees_per_second in…
 
 prior to this the pid values were 
 p,i,d = 0.001,0,0.02
@@ -12,3 +10,9 @@ basically PIDcontroller is now sent speed in degrees per second so it is as thou
 inverse(a) to make the math work out
 
 i used a function to do this but will remove this later and hard code it.
+
+
+## commit: hardcoded the new pid values
+the new pid values are now hardcoded  
+
+
