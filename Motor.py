@@ -1,4 +1,5 @@
 import math
+from PIDcontroller import PIDController
 
 class Motor():
     PORTS = ['A','B','C','D']
@@ -11,10 +12,16 @@ class Motor():
         self.set_combi_mode()
         self.set_bias()
         self.set_plimit()
-        self.listener = lambda speed: 0
+        self.listeners = []
         self.count = 0
         self.direction = direction
         self.wheel_diameter = 276 #mm
+        self.PIDcontroller = PIDController(0.001,0,0.02)
+        self.speed = 0
+        
+    """
+    methods which send messages to the buildhat
+    """
         
     def write(self,message):
         full_message = f'port {self.port_index}; {message}'
@@ -29,10 +36,6 @@ class Motor():
     def set_bias(self):
         self.write(f'bias 0.4')
         
-    def set_power(self,power=0.2):
-        pass
-        #self.write(f'set {power}')
-        
     def pwm(self,pwm):
         pwm = (pwm * self.direction)/100
         if(pwm>1 or pwm<-1):
@@ -40,6 +43,29 @@ class Motor():
           pwm=math.copysign(1,pwm)*1
         data = f'set {pwm};'
         self.write(data)
+        
+    """methods which handles messages received from the build hat"""
+        
+    def handle_data(self,speed,pos,apos):
+        self.count = (self.count+1)%100
+        if self.count==1:
+            sentence = f'port: {self.port_letter}, speed_10deg/sec: {speed}, speed_mm/s: {speed*(1/36)*276.401},pos: {pos}, apos: {apos}'
+            print(sentence)
+        speed = self.direction * self.getSpeed(speed)
+        self.update(speed)
+        
+        
+    def update(self,speed):
+        updated_pwm = self.PIDcontroller.update(speed)
+        self.pwm(updated_pwm)
+        
+        
+    def call_listeners(self):
+        """not being used yet but will eventually be called in handle data"""
+        [listener() for listener in self.listeners]
+        
+        
+    """utility methods"""
         
     def getSpeed(self,aSpeed):
          speed =  (aSpeed/36)*self.wheel_diameter
@@ -49,19 +75,24 @@ class Motor():
          distance = pos/360*self.wheel_diameter
          return distance
      
+    
+    """interface"""
+        
     def add_listener(self,listener):
-        self.listener = listener
+        """not fully implemented here as an idea only"""
+        self.listeners.append(listener)
         
     def remove_listener(self):
-        self.listener = lambda speed: 0
+        """not fully implemented here as an idea only"""
+        pass
         
-    def handle_data(self,speed,pos,apos):
-        self.count = (self.count+1)%100
-        if self.count==1:
-            sentence = f'port: {self.port_letter}, speed_10deg/sec: {speed}, speed_mm/s: {speed*(1/36)*276.401},pos: {pos}, apos: {apos}'
-            print(sentence)
-        speed = self.direction * self.getSpeed(speed)
-        self.listener(speed)
+    def dc(self,duty=0.2):
+        pass
+        
+    def run(self,speed):
+        self.speed = speed
+        print('set point',0)
+        self.PIDcontroller.set_point = speed
         
     def __str__(self):
         return f'Motor PortIndex:{self.port_index}, Port: {self.port_letter}'

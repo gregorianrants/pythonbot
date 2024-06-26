@@ -9,15 +9,13 @@ class Serial():
         self.ser = serial.Serial("/dev/serial0",115200,timeout=1)
         self.motors = [None,None,None,None]
         self.thread = threading.Thread(target=self.listener,args=(),daemon=True)
+        self.thread.start()
         
     def listener(self):
         while True:
             line = self.ser.read_until(b'\r\n').decode()
             #print(line.rstrip())
             self.handle_data(line)
-            
-    def start(self):
-        self.thread.start()
             
     def add_motor(self,motor):
         self.motors[motor.port_index]=motor
