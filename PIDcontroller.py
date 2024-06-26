@@ -45,7 +45,6 @@ class PIDController:
    def update(self,speed):
       if(self.set_point==0):
          self.power = 0
-         print('hello')
          return self.power
       error = speed-self.set_point
       adjustment = self.get_value(error)

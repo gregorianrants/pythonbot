@@ -56,7 +56,6 @@ class Motor():
         #yes you read that right i said "10"
         #to degrees per second.
         speed = self.direction * speed * 10 
-        print(speed)
         self.update(speed)
         
         
@@ -97,7 +96,6 @@ class Motor():
     #we have changed the speed entered here from mm_per_second to degrees per second.
     def run(self,degrees_per_second):
         self.speed = degrees_per_second
-        print('set point',0)
         self.PIDcontroller.set_point = self.speed
         
     def __str__(self):
