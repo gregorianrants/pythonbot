@@ -28,3 +28,4 @@ i have put something dirty in an if conditional in the update method of PID, may
 2.  remove some comments that i put in when refactoring pid
 3. remove the function i used to adjust pid values when refactoring PID.update
 4. rename some variables i.e. you have speed variables that refer to multiple things: target_speed and measured_speed be more explicit.
+5. need to stop hat emiting data on shutdown

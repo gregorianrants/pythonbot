@@ -1,4 +1,1 @@
-l = [None,None]
-
-if l[0]:
-    print('hello')
+print("\x02\r".encode())

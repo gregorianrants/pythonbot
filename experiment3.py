@@ -1,4 +1,4 @@
-from Serial import Serial
+from BuildHat import BuildHat as Serial
 from Motor import Motor
 from Robot import Robot
 import time
