@@ -4,6 +4,8 @@ import time
 import re
 import threading
 from dataclasses import dataclass
+import asyncio
+import serial_asyncio
 
 
 class BuildHat:
@@ -11,26 +13,32 @@ class BuildHat:
     BOOT_LOADER = "BuildHAT bootloader version"
 
     def __init__(self):
-        self.ser = serial.Serial("/dev/serial0", 115200, timeout=1)
+        self.reader, self.writer = (None, None)
         self.motors = [None, None, None, None]
-        self.thread = threading.Thread(target=self.listener, args=(), daemon=True)
-        self.initialise_hat()
-        time.sleep(8)
-        self.thread.start()
-        self.count = 0
+        # self.thread = threading.Thread(target=self.listener, args=(), daemon=True)
+        # self.initialise_hat()
+        # time.sleep(8)
+        # self.thread.start()
+        # self.count = 0
 
     # methods used when state of hat is unknown, to check if firmware is loaded and load it if it isnt.
 
-    def initialise_hat(self):
-        if self.check_if_firmware_loaded():
+    async def start(self):
+        self.reader, self.writer = await serial_asyncio.open_serial_connection(
+            url="/dev/serial0", baudrate=115200
+        )
+        await self.initialise_hat()
+
+    async def initialise_hat(self):
+        if await self.check_if_firmware_loaded():
             return
-        self.load_firmware()
-        if not self.check_if_firmware_loaded():
+        await self.load_firmware()
+        if not await self.check_if_firmware_loaded():
             raise Exception("there was a problem initializing the hat")
 
-    def check_if_firmware_loaded(self):
-        self.write("version")
-        line = self.look_for_lines([self.FIRMWARE, self.BOOT_LOADER], 50)
+    async def check_if_firmware_loaded(self):
+        self.write_and_log("version")
+        line = await self.look_for_lines([self.FIRMWARE, self.BOOT_LOADER], 50)
         if line == self.FIRMWARE:
             print("firmware is loaded")
             return True
@@ -44,21 +52,23 @@ class BuildHat:
 
     def write_and_log(self, message):
         print(f"writing: {message}")
-        self.ser.write(f"{message}\r".encode())
+        self.writer.write(f"{message}\r".encode())
 
     def write_bytes(self, bytes):
         print("writing: <some bytes>")
-        self.ser.write(bytes)
+        self.writer.write(bytes)
 
-    def read(self):
-        line = self.ser.read_until(b"\r\n").decode()
+    async def read(self):
+        line = await self.reader.readuntil(b"\r\n")
+        print(line)
+        line = line.decode()
         if len(line) < 150:
             print(f"reading: {line}")
         else:
             print("reading: <long line>")
         return line
 
-    def look_for_lines(self, expected_lines, max_lines=10):
+    async def look_for_lines(self, expected_lines, max_lines=10):
         """takes an array of expected_lines and keeps checking the lines returned
           by serial port till one of them
         matches one of the expected lines, then returns that expected line or false
@@ -66,7 +76,8 @@ class BuildHat:
         """
         print("looking for:", expected_lines)
         for i in range(max_lines):
-            received_line = self.read()
+            received_line = await self.read()
+            print(received_line)
             for expected_line in expected_lines:
                 if re.search(r"" + expected_line + "", received_line):
                     print("found:", expected_line)
@@ -74,8 +85,9 @@ class BuildHat:
         print("line wasnt found within expected number of line reads")
         return False
 
-    def get_prompt(self):
-        return self.look_for_lines(["BHBL>"])
+    async def get_prompt(self):
+        found_line = await self.look_for_lines(["BHBL>"])
+        return found_line
 
     def checksum(self, data):
         """Calculate checksum from data
@@ -92,29 +104,31 @@ class BuildHat:
             u = (u ^ data[i]) & 0xFFFFFFFF
         return u
 
-    def load_firmware(self):
+    async def load_firmware(self):
         with open("data/firmware.bin", "rb") as f:
             firm = f.read()
         with open("data/signature.bin", "rb") as f:
             sig = f.read()
-        self.get_prompt()
+        print("loading firmware")
+        await asyncio.sleep(1)
+        await self.get_prompt()
         self.write_and_log("clear")
-        self.get_prompt()
-        time.sleep(0.1)
+        await self.get_prompt()
+        await asyncio.sleep(0.1)
         self.write_and_log(f"load {len(firm)} {self.checksum(firm)}")
-        time.sleep(0.1)
+        await time.sleep(0.1)
         self.write_bytes(b"\x02")
         self.write_bytes(firm)
         self.write_bytes(b"\x03")
-        self.get_prompt()
+        await self.get_prompt()
         self.write_and_log(f"signature {len(sig)}")
-        time.sleep(0.1)
+        await time.sleep(0.1)
         self.write_bytes(b"\x02")
         self.write_bytes(sig)
         self.write_bytes(b"\x03")
-        self.get_prompt()
+        await self.get_prompt()
         self.write_and_log("verify")
-        line = self.look_for_lines(["Image verifed OK"], 15)
+        line = await self.look_for_lines(["Image verifed OK"], 15)
         if line == "Image verifed OK":
             self.write_and_log("reboot")
         time.sleep(5)
@@ -149,4 +163,4 @@ class BuildHat:
         self.motors[motor.port_index] = motor
 
     def write(self, message):
-        self.ser.write(f"{message}\r".encode())
+        self.writer.write(f"{message}\r".encode())
