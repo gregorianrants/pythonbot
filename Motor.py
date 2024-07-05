@@ -18,9 +18,11 @@ class Motor:
         # self.PIDcontroller = PIDController(0.001,0,0.02)
         self.PIDcontroller = PIDController(0.00076, 0.003, 0.0153)
         self.speed = 0
+        self.ser.add_motor(self)
         self.set_combi_mode()
         self.set_plimit()
-        self.ser.add_motor(self)
+        
+        time.sleep(3)
 
     """
     methods which send messages to the buildhat
