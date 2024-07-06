@@ -40,7 +40,7 @@ class Motor:
         self.write(f"select")
         self.write(f"combi 0 1 0 2 0 3 0")
         self.write(f"select 0; selrate 10")
-        self.write(f"select 0")
+        # self.write(f"select 0")
 
     def set_plimit(self):
         self.write(f"plimit 1")
@@ -61,6 +61,7 @@ class Motor:
         if self.count == 1:
             data = {
                 "port": self.port_letter,
+                "target_speed_deg/sec": self.PIDcontroller.set_point,
                 "speed_deg/sec": speed * 10,
                 "speed_mm/s": speed * (1 / 36) * 276.401,
                 "pos": pos,
