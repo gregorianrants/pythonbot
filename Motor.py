@@ -21,7 +21,11 @@ class Motor:
         self.ser.add_motor(self)
         self.set_combi_mode()
         self.set_plimit()
-        
+        # for some reason if i dont put a delay here the buildhat outputs zero speed
+        # for a about 3 seconds even if wheels are moving.  this causes large measured error
+        # in pid which sets max pwm and wheels go to fast.
+        # thought it was an error being raised on buildhat when i was setting bias with deprecated command
+        # the problem still remains though.
         time.sleep(3)
 
     """
@@ -37,7 +41,7 @@ class Motor:
         self.write(f"combi 0 1 0 2 0 3 0")
         self.write(f"select 0; selrate 10")
         self.write(f"select 0")
-      
+
     def set_plimit(self):
         self.write(f"plimit 1")
 

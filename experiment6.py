@@ -10,15 +10,15 @@ import zmq
 from dotenv import load_dotenv
 import os
 
-# load_dotenv()
+load_dotenv()
 
 
-# PI_IP = os.getenv('PI_IP')
+PI_IP = os.getenv("PI_IP")
 
-# context = zmq.Context()
-# publisher = Publisher(
-#     context=context, address=f'tcp://{PI_IP}', node="motor", topic="motor-data"
-# )
+context = zmq.Context()
+publisher = Publisher(
+    context=context, address=f"tcp://{PI_IP}", node="motor", topic="motor-data"
+)
 
 
 serial = Serial()

@@ -97,7 +97,8 @@ class BuildHat:
             firm = f.read()
         with open("data/signature.bin", "rb") as f:
             sig = f.read()
-        self.get_prompt()
+        # self.get_prompt()  not sure this line is necessary
+        # a bug i found when converting to asycio highlighted this, see notes for more info.
         self.write_and_log("clear")
         self.get_prompt()
         time.sleep(0.1)
