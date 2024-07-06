@@ -1,6 +1,7 @@
 import math
 from PIDcontroller import PIDController
 import time
+import asyncio
 
 
 class Motor:
@@ -21,7 +22,7 @@ class Motor:
         self.ser.add_motor(self)
         self.set_combi_mode()
         self.set_plimit()
-        
+
         time.sleep(3)
 
     """
@@ -37,7 +38,7 @@ class Motor:
         self.write(f"combi 0 1 0 2 0 3 0")
         self.write(f"select 0; selrate 10")
         self.write(f"select 0")
-      
+
     def set_plimit(self):
         self.write(f"plimit 1")
 
@@ -92,12 +93,12 @@ class Motor:
 
     """interface"""
 
-    def clean_up(self):
+    async def clean_up(self):
         self.pwm(0)
         self.write(f"select")
-        time.sleep(0.2)
+        await asyncio.sleep(0.2)
         self.pwm(0)
-        time.sleep(0.5)
+        await asyncio.sleep(0.5)
 
     def add_listener(self, listener):
         """not fully implemented here as an idea only"""

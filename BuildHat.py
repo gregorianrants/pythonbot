@@ -28,6 +28,7 @@ class BuildHat:
             url="/dev/serial0", baudrate=115200
         )
         await self.initialise_hat()
+        return asyncio.create_task(self.listener())
 
     async def initialise_hat(self):
         if await self.check_if_firmware_loaded():
@@ -111,18 +112,18 @@ class BuildHat:
             sig = f.read()
         print("loading firmware")
         await asyncio.sleep(1)
-        await self.get_prompt()
+        # await self.get_prompt()
         self.write_and_log("clear")
         await self.get_prompt()
         await asyncio.sleep(0.1)
         self.write_and_log(f"load {len(firm)} {self.checksum(firm)}")
-        await time.sleep(0.1)
+        await asyncio.sleep(0.1)
         self.write_bytes(b"\x02")
         self.write_bytes(firm)
         self.write_bytes(b"\x03")
         await self.get_prompt()
         self.write_and_log(f"signature {len(sig)}")
-        await time.sleep(0.1)
+        await asyncio.sleep(0.1)
         self.write_bytes(b"\x02")
         self.write_bytes(sig)
         self.write_bytes(b"\x03")
@@ -131,14 +132,13 @@ class BuildHat:
         line = await self.look_for_lines(["Image verifed OK"], 15)
         if line == "Image verifed OK":
             self.write_and_log("reboot")
-        time.sleep(5)
+        await asyncio.sleep(5)
 
     # methods used in firmware_loaded state
 
-    def listener(self):
+    async def listener(self):
         while True:
-            line = self.ser.read_until(b"\r\n").decode()
-            # print(line.rstrip())
+            line = (await self.reader.readuntil(b"\r\n")).decode()
             self.handle_data(line)
 
     def handle_data(self, line):
