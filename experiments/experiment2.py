@@ -1,5 +1,5 @@
 from Serial import Serial
-from Motor import Motor
+from src.Motor import Motor
 import time
 import signal
 import sys

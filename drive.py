@@ -1,8 +1,8 @@
 import sys
 import time
-from Motor import Motor
-from Serial import Serial
-from Robot import Robot
+from src.Motor import Motor
+from BuildHat import BuildHat as  Serial
+from src.Robot import Robot
 from MotorSpeed import MotorSpeed
 from sshkeyboard import listen_keyboard
 import signal

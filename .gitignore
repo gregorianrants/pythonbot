@@ -1,4 +1,6 @@
 venv
 .env
 
+sysvenv
+
 .lgd-nfy0

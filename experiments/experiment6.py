@@ -1,6 +1,6 @@
-from BuildHat import BuildHat as Serial
-from Motor import Motor
-from Robot import Robot
+from src.BuildHat import BuildHat as Serial
+from src.Motor import Motor
+from src.Robot import Robot
 import time
 import signal
 import sys

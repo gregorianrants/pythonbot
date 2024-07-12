@@ -21,6 +21,12 @@ class BuildHat:
 
     # methods used when state of hat is unknown, to check if firmware is loaded and load it if it isnt.
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        pass
+
     def initialise_hat(self):
         if self.check_if_firmware_loaded():
             return
@@ -123,6 +129,7 @@ class BuildHat:
     # methods used in firmware_loaded state
 
     def listener(self):
+        print("starting to listen")
         while True:
             line = self.ser.read_until(b"\r\n").decode()
             # print(line.rstrip())

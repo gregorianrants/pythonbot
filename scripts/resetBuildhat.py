@@ -1,10 +1,13 @@
 from gpiozero import Device,DigitalOutputDevice
-from gpiozero.pins.rpigpio import RPiGPIOFactory
+#from gpiozero.pins.rpigpio import RPiGPIOFactory
 import time
+
+from gpiozero.pins.lgpio import LGPIOFactory
 
 
 #PAY ATTENTION IT IS DEVICE WE NEED TO SET PIN FACTORY ON
-Device.pin_factory  = RPiGPIOFactory()
+#Device.pin_factory  = RPiGPIOFactory()
+Device.pin_factory  = LGPIOFactory()
 
 #EVEN THOUGH WE USE DigitalOutputDevice which has a pin factory property
 #DigitalOutputDevice.pin_factory = RPiGPIOFactory()

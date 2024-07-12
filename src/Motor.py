@@ -1,12 +1,35 @@
 import math
-from PIDcontroller import PIDController
+from src.PIDcontroller import PIDController
 import time
+
+
+class DataEmitter:
+    def __init__(self, in_rate, out_rate, formatter):
+        self.in_rate = in_rate
+        self.out_rate = out_rate
+        self.count_to_handle_data_on = self.in_rate / self.out_rate
+        self.counter = 0
+        self.handler = None
+        self.formatter = formatter
+        self.handlers = [print]
+
+    def add_handler(self, handler):
+        self.handlers.append(handler)
+
+    def handleData(self, speed, pos, apos):
+        if self.counter == 0:
+            data = self.formatter(speed, pos, apos)
+            self.call_handlers(data)
+        self.counter = (self.counter + 1) % self.count_to_handle_data_on
+
+    def call_handlers(self, data):
+        [listener(data) for listener in self.handlers]
 
 
 class Motor:
     PORTS = ["A", "B", "C", "D"]
 
-    def __init__(self, port, ser, direction=1):
+    def __init__(self, port, ser, direction=1, output_data_rate=1):
         self.port_letter = port
         self.port_index = self.PORTS.index(port)
         self.mode = 0
@@ -18,9 +41,17 @@ class Motor:
         # self.PIDcontroller = PIDController(0.001,0,0.02)
         self.PIDcontroller = PIDController(0.00076, 0.003, 0.0153)
         self.speed = 0
+        self.selrate = 10
         self.ser.add_motor(self)
         self.set_combi_mode()
         self.set_plimit()
+
+        self.received_data_rate = 1000 / self.selrate
+        self.data_emitter = DataEmitter(
+            in_rate=self.received_data_rate,
+            out_rate=output_data_rate,
+            formatter=self.format_data,
+        )
         # for some reason if i dont put a delay here the buildhat outputs zero speed
         # for a about 3 seconds even if wheels are moving.  this causes large measured error
         # in pid which sets max pwm and wheels go to fast.
@@ -39,7 +70,7 @@ class Motor:
     def set_combi_mode(self):
         self.write(f"select")
         self.write(f"combi 0 1 0 2 0 3 0")
-        self.write(f"select 0; selrate 10")
+        self.write(f"select 0; selrate {self.selrate}")
         # self.write(f"select 0")
 
     def set_plimit(self):
@@ -55,35 +86,29 @@ class Motor:
 
     """methods which handles messages received from the build hat"""
 
+    def format_data(self, speed, pos, apos):
+        data = {
+            "port": self.port_letter,
+            "target_speed_deg/sec": self.PIDcontroller.set_point,
+            "speed_deg/sec": speed * 10,
+            "speed_mm/s": speed * (1 / 36) * 276.401,
+            "pos": pos,
+            "apos": apos,
+            "time": time.time(),
+        }
+        return data
+
     def handle_data(self, speed, pos, apos):
-        # print(speed)
-        self.count = (self.count + 1) % 20
-        if self.count == 1:
-            data = {
-                "port": self.port_letter,
-                "target_speed_deg/sec": self.PIDcontroller.set_point,
-                "speed_deg/sec": speed * 10,
-                "speed_mm/s": speed * (1 / 36) * 276.401,
-                "pos": pos,
-                "apos": apos,
-                "time": time.time(),
-            }
-            print(data)
-            self.call_listeners(data)
-        # speed = self.direction * self.getSpeed(speed)
         # we are converting the speed output by the build hat which is in 10 degrees per second
         # yes you read that right i said "10"
         # to degrees per second.
+        self.data_emitter.handleData(speed, pos, apos)
         speed = self.direction * speed * 10
         self.update(speed)
 
     def update(self, speed):
         updated_pwm = self.PIDcontroller.update(speed)
         self.pwm(updated_pwm)
-
-    def call_listeners(self, data):
-        """not being used yet but will eventually be called in handle data"""
-        [listener(data) for listener in self.listeners]
 
     """utility methods"""
 
@@ -106,7 +131,7 @@ class Motor:
 
     def add_listener(self, listener):
         """not fully implemented here as an idea only"""
-        self.listeners.append(listener)
+        self.data_emitter.add_handler(listener)
 
     def remove_listener(self):
         """not fully implemented here as an idea only"""
