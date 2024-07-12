@@ -16,6 +16,7 @@ class BuildHat:
         self.thread = threading.Thread(target=self.listener, args=(), daemon=True)
         self.initialise_hat()
         time.sleep(8)
+        self.running = True
         self.thread.start()
         self.count = 0
 
@@ -25,7 +26,14 @@ class BuildHat:
         return self
 
     def __exit__(self, type, value, traceback):
-        pass
+        print("exiting buildhat")
+        self.running = False
+        # this sleep needs to be longer than the time out on the serial connection
+        # otherwise the thread blocks when trying to read serial port and never ends
+        # consider a more elegant solution.
+        time.sleep(1.2)
+        print("closing serial port")
+        self.ser.close()
 
     def initialise_hat(self):
         if self.check_if_firmware_loaded():
@@ -130,10 +138,11 @@ class BuildHat:
 
     def listener(self):
         print("starting to listen")
-        while True:
+        while self.running:
             line = self.ser.read_until(b"\r\n").decode()
             # print(line.rstrip())
             self.handle_data(line)
+        print("closing buildhat listener thread")
 
     def handle_data(self, line):
         # self.count = (self.count + 1) % 100

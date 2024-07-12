@@ -57,7 +57,14 @@ class Motor:
         # in pid which sets max pwm and wheels go to fast.
         # thought it was an error being raised on buildhat when i was setting bias with deprecated command
         # the problem still remains though.
-        time.sleep(3)
+        # time.sleep(3)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        print("exiting motor")
+        self.clean_up()
 
     """
     methods which send messages to the buildhat
@@ -68,10 +75,10 @@ class Motor:
         self.ser.write(full_message)
 
     def set_combi_mode(self):
+        pass
         self.write(f"select")
         self.write(f"combi 0 1 0 2 0 3 0")
-        self.write(f"select 0; selrate {self.selrate}")
-        # self.write(f"select 0")
+        self.write(f"select 0; selrate 10")
 
     def set_plimit(self):
         self.write(f"plimit 1")
